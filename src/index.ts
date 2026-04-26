@@ -1,8 +1,13 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import OpenAI from "openai";
 
 dotenv.config();
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_KEY,
+});
 
 const app = express();
 
@@ -37,7 +42,7 @@ app.get("/api/chat", (req, res) => {
 // ----------------------
 // CHAT (POST - FIXED)
 // ----------------------
-app.post("/api/chat", (req, res) => {
+app.post("/api/chat", async (req, res) => {
   const { message, userId } = req.body;
 
   if (!message) {
@@ -46,11 +51,32 @@ app.post("/api/chat", (req, res) => {
     });
   }
 
-  return res.json({
-    reply: `ProConnect AI received: ${message}`,
-    userId: userId || null,
-    status: "working"
-  });
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: message
+        }
+      ],
+      max_tokens: 500
+    });
+
+    const aiReply = response.choices[0]?.message?.content || "No response generated";
+
+    return res.json({
+      reply: aiReply,
+      userId: userId || null,
+      status: "success"
+    });
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    return res.status(500).json({
+      error: "Failed to generate response",
+      status: "error"
+    });
+  }
 });
 
 // ----------------------
