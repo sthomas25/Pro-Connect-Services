@@ -12,10 +12,7 @@ app.use(express.json());
 // ----------------------
 // ENV CHECK
 // ----------------------
-const PORT = process.env.PORT;
-if (!PORT) {
-  throw new Error("PORT environment variable is required");
-}
+const PORT = Number(process.env.PORT || 3000);
 
 // ----------------------
 // HEALTH CHECK
